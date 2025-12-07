@@ -22,6 +22,7 @@ public class Jabeja {
 
   private boolean resultFileCreated = false;
 
+
   //-------------------------------------------------------------------
   public Jabeja(HashMap<Integer, Node> graph, Config config) {
     this.entireGraph = graph;
@@ -34,7 +35,7 @@ public class Jabeja {
 
 
   //-------------------------------------------------------------------
- /* public void startJabeja() throws IOException {
+ public void startJabeja() throws IOException {
     for (round = 0; round < config.getRounds(); round++) {
       for (int id : entireGraph.keySet()) {
         sampleAndSwap(id);
@@ -45,9 +46,11 @@ public class Jabeja {
       saCoolDown();
       report();
     }
-  }*/
+  }
 
-  public void startJabeja() throws IOException {
+  //start jabeja after 400
+
+  /*public void startJabeja() throws IOException {
     for (round = 0; round < config.getRounds(); round++) {
 
         // Restart SA at round 400
@@ -65,6 +68,7 @@ public class Jabeja {
     }
 
   }
+
 
 
   /**
@@ -137,12 +141,66 @@ public class Jabeja {
     }
   }
 
+  // find partner optional task
+  public Node findPartner(int nodeId, Integer[] nodes){
+
+    Node nodep = entireGraph.get(nodeId);
+    int colorP = nodep.getColor();
+
+    Node bestPartner = null;
+    double bestNewValue = Double.NEGATIVE_INFINITY;
+
+    double alpha = config.getAlpha();
+
+    if (nodes == null) return null;
+
+    for (Integer candidateId : nodes) {
+
+        Node nodeq = entireGraph.get(candidateId);
+        if (nodeq == null) continue;
+
+        int colorQ = nodeq.getColor();
+        if (colorP == colorQ) continue;
+
+        // Gradi attuali
+        int d_pp = getDegree(nodep, colorP);
+        int d_qq = getDegree(nodeq, colorQ);
+
+        // Gradi se scambiassimo i colori
+        int d_pq = getDegree(nodep, colorQ);
+        int d_qp = getDegree(nodeq, colorP);
+
+        // Valore prima e dopo
+        double oldValue = Math.pow(d_pp, alpha) + Math.pow(d_qq, alpha);
+        double newValue = Math.pow(d_pq, alpha) + Math.pow(d_qp, alpha);
+
+        double delta = newValue - oldValue;
+
+        // Acceptance probability: sigmoid
+        double prob = 1.0 / (1.0 + Math.exp(-(delta / T)));
+
+        // Random number
+        double rand = RandNoGenerator.nextInt(1000000) / 1000000.0;
+
+        boolean accept = rand < prob;
+
+        // Mantieni il partner migliore tra quelli accettati
+        if (accept && newValue > bestNewValue) {
+            bestNewValue = newValue;
+            bestPartner = nodeq;
+        }
+    }
+
+    return bestPartner;
+}
+
+
   /* 
    * Find the best partner for a color swap among a set of candidate nodes.
    * A partner is accepted only if the swap improves the local objective,
    * according to the JA-BE-JA formula and the current temperature T.
    * TASK2 version
-   */
+   *
     public Node findPartner(int nodeId, Integer[] nodes){
 
     Node nodep = entireGraph.get(nodeId);
@@ -210,7 +268,7 @@ public class Jabeja {
     }
 
     return bestPartner;
-  }
+  }*/
 
 
   /**
