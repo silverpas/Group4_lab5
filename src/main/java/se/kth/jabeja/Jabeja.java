@@ -34,7 +34,7 @@ public class Jabeja {
 
 
   //-------------------------------------------------------------------
-  public void startJabeja() throws IOException {
+ /* public void startJabeja() throws IOException {
     for (round = 0; round < config.getRounds(); round++) {
       for (int id : entireGraph.keySet()) {
         sampleAndSwap(id);
@@ -45,13 +45,32 @@ public class Jabeja {
       saCoolDown();
       report();
     }
+  }*/
+
+  public void startJabeja() throws IOException {
+    for (round = 0; round < config.getRounds(); round++) {
+
+        // Restart SA at round 400
+        if (round == 400) {
+            T = config.getTemperature();
+            logger.info("=== RESTART SA at round " + round + ", T reset to " + T + " ===");
+        }
+
+        for (int id : entireGraph.keySet()) {
+            sampleAndSwap(id);
+        }
+
+        saCoolDown();
+        report();
+    }
+
   }
+
 
   /**
    * Simulated analealing cooling function
    * TASK2 version
-   */
-    private void saCoolDown(){
+   */private void saCoolDown(){
     // Task 2: exponential cooling
     double alpha = 1.0 - config.getDelta();   // es. delta=0.003 -> alpha=0.997
 
@@ -68,7 +87,7 @@ public class Jabeja {
   }
 
   /* TASK1 version
-  private void saCoolDown(){
+  *private void saCoolDown(){
     // TODO for second task
     if (T > 1)
       T -= config.getDelta();
@@ -196,7 +215,7 @@ public class Jabeja {
 
   /**
    * TASK1 version
-   * public Node findPartner(int nodeId, Integer[] nodes){
+  * public Node findPartner(int nodeId, Integer[] nodes){
 
     Node nodep = entireGraph.get(nodeId);
     int colorP = nodep.getColor();
@@ -249,8 +268,8 @@ public class Jabeja {
     }
 
     return bestPartner;
-  }
-  */
+  }*/
+  
 
   /**
    * The the degreee on the node based on color
