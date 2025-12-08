@@ -26,7 +26,7 @@ public class Jabeja {
   private int exponent_round = 0;
 
   private boolean task2 = true;
-  private final String optional = "LoriSilvia";
+  private final String optional = "";
 
   //-------------------------------------------------------------------
   public Jabeja(HashMap<Integer, Node> graph, Config config) {
@@ -36,9 +36,21 @@ public class Jabeja {
     this.numberOfSwaps = 0;
     this.config = config;
     if (this.task2) {
-      this.T = 1;
-      this.MAX_T = 1;
-      config.setDelta((float) 0.9);
+      /* TRY3: deep exploration */
+      this.T = 5.0;             // temperatura iniziale molto alta
+      this.MAX_T = 5.0;
+      config.setDelta(0.999f);  // cooling lentissimo
+
+      /* TRY2: exploration moderate 
+      this.T = 2.0;             //partenza più alta → accetta più bad swaps
+      this.MAX_T = 2.0;
+      config.setDelta(0.995f);  //cooling molto lento → T cala piano
+      /*
+      TRY1: baseline stable 
+      this.T = 1.0;             //temperatura iniziale bassa → esplora poco
+      this.MAX_T = 1.0;
+      config.setDelta(0.90f);   //cooling molto aggressivo → scende rapidamente
+      */
     }
     else {
      this.T = config.getTemperature();
@@ -139,24 +151,26 @@ public class Jabeja {
       Node nodeq = entireGraph.get(q);
       int degree_pp = getDegree(nodep, nodep.getColor());
       int degree_qq = getDegree(nodeq, nodeq.getColor());
-      double old_d = Math.pow(degree_pp, config.getAlpha()) + Math.pow(degree_qq, config.getAlpha());
+      double oldEnergy = Math.pow(degree_pp, config.getAlpha()) + Math.pow(degree_qq, config.getAlpha());
       int degree_pq = getDegree(nodep, nodeq.getColor());
       int degree_qp = getDegree(nodeq, nodep.getColor());
-      double new_d = Math.pow(degree_pq, config.getAlpha()) + Math.pow(degree_qp, config.getAlpha());
+      double newEnergy = Math.pow(degree_pq, config.getAlpha()) + Math.pow(degree_qp, config.getAlpha());
+      
       if (task2) {
         Random random = new Random();
         double prob = random.nextDouble();
-        double acceptance = computeAcceptance(new_d, old_d);
-        // Check this in order to avoid having a 100% acceptance rate (convergence)
-        if (new_d != old_d  && acceptance > prob && acceptance > highestBenefit) {
+        double acceptance = computeAcceptance(newEnergy, oldEnergy);
+
+        //evitare 100% acceptance
+        if (newEnergy != oldEnergy  && acceptance > prob && acceptance > highestBenefit) {
           bestPartner = nodeq;
           highestBenefit = acceptance;
         }
       }
       else {
-        if(new_d * T > old_d && new_d > highestBenefit) {
+        if(newEnergy * T > oldEnergy && newEnergy > highestBenefit) {
         bestPartner = nodeq;
-        highestBenefit = new_d;
+        highestBenefit = newEnergy;
         }
       }
     }
