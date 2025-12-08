@@ -36,21 +36,21 @@ public class Jabeja {
     this.numberOfSwaps = 0;
     this.config = config;
     if (this.task2) {
-      /* TRY3: deep exploration */
+      /* TRY3: deep exploration 
       this.T = 5.0;             // temperatura iniziale molto alta
       this.MAX_T = 5.0;
       config.setDelta(0.999f);  // cooling lentissimo
 
       /* TRY2: exploration moderate 
       this.T = 2.0;             //partenza più alta → accetta più bad swaps
-      this.MAX_T = 2.0;
+      this.MAX_T = 2.0; hg
       config.setDelta(0.995f);  //cooling molto lento → T cala piano
       /*
-      TRY1: baseline stable 
+      TRY1: baseline stable */
       this.T = 1.0;             //temperatura iniziale bassa → esplora poco
       this.MAX_T = 1.0;
       config.setDelta(0.90f);   //cooling molto aggressivo → scende rapidamente
-      */
+      
     }
     else {
      this.T = config.getTemperature();
@@ -76,12 +76,13 @@ public class Jabeja {
    */
   private double computeAcceptance(double new_val, double old_val){
     if (optional.equals("LoriSilvia")) {
-      return Math.exp((new_val - old_val) / Math.pow(T, exponent_round));
-    }
+        return Math.exp((new_val - old_val) / Math.pow(T, exponent_round));
+    } 
     else {
-     return Math.exp((new_val - old_val) / T);
+        return new_val * T - old_val;   // > 0 significa accetta
     }
   }
+
 
   /**
    * Simulated annealing cooling function
@@ -145,38 +146,49 @@ public class Jabeja {
     Node nodep = entireGraph.get(nodeId);
 
     Node bestPartner = null;
-    double highestBenefit = 0;
+    double bestScore = Double.NEGATIVE_INFINITY;
 
-    for(Integer q: nodes) {
-      Node nodeq = entireGraph.get(q);
-      int degree_pp = getDegree(nodep, nodep.getColor());
-      int degree_qq = getDegree(nodeq, nodeq.getColor());
-      double oldEnergy = Math.pow(degree_pp, config.getAlpha()) + Math.pow(degree_qq, config.getAlpha());
-      int degree_pq = getDegree(nodep, nodeq.getColor());
-      int degree_qp = getDegree(nodeq, nodep.getColor());
-      double newEnergy = Math.pow(degree_pq, config.getAlpha()) + Math.pow(degree_qp, config.getAlpha());
-      
-      if (task2) {
-        Random random = new Random();
-        double prob = random.nextDouble();
-        double acceptance = computeAcceptance(newEnergy, oldEnergy);
+    for (Integer q : nodes) {
 
-        //evitare 100% acceptance
-        if (newEnergy != oldEnergy  && acceptance > prob && acceptance > highestBenefit) {
-          bestPartner = nodeq;
-          highestBenefit = acceptance;
+        Node nodeq = entireGraph.get(q);
+
+        double oldEnergy = Math.pow(getDegree(nodep, nodep.getColor()), config.getAlpha())
+                         + Math.pow(getDegree(nodeq, nodeq.getColor()), config.getAlpha());
+
+        double newEnergy = Math.pow(getDegree(nodep, nodeq.getColor()), config.getAlpha())
+                         + Math.pow(getDegree(nodeq, nodep.getColor()), config.getAlpha());
+
+        //  TASK 1 → JaBeJa ORIGINAL RULE (deterministic)
+        if (!task2 && optional.equals("")) {
+            if (newEnergy * T > oldEnergy && newEnergy > bestScore) {
+                bestScore = newEnergy;
+                bestPartner = nodeq;
+            }
+            continue;
         }
-      }
-      else {
-        if(newEnergy * T > oldEnergy && newEnergy > highestBenefit) {
-        bestPartner = nodeq;
-        highestBenefit = newEnergy;
+        //  TASK 2 → Simulated annealing with restart (deterministic acceptance)
+        if (task2 && optional.equals("")) {
+            double delta = newEnergy - oldEnergy;
+            if (delta > 0 && newEnergy > bestScore) {
+                bestScore = newEnergy;
+                bestPartner = nodeq;
+            }
+            continue;
         }
-      }
+        //  TASK OPTIONAL → probabilistic acceptance (LoriSilvia)
+        if (optional.equals("LoriSilvia")) {
+            double acceptanceProb = Math.exp((newEnergy - oldEnergy) / Math.pow(T, exponent_round));
+            double rand = Math.random();
+            if (newEnergy != oldEnergy && rand < acceptanceProb && acceptanceProb > bestScore) {
+                bestScore = acceptanceProb;
+                bestPartner = nodeq;
+            }
+        }
     }
 
     return bestPartner;
-  }
+  } 
+
 
   /**
    * The the degreee on the node based on color
